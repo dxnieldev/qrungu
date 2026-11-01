@@ -1,0 +1,686 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>QRUngu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+/* Layout: purple header band, one working column of three steps on the left, sticky live preview on the right; stacks on phones. */
+:root {
+  --bg: #F5F2F8;
+  --surface: #FFFFFF;
+  --ink: #24182E;
+  --muted: #6B6177;
+  --line: #E2DAEA;
+  --chip: #EEE6F5;
+  --accent: #4B1D6B;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E6DAF0;
+  --band: #3A1556;
+  --gold: #F2B705;
+  --ok: #1E7A3C;
+  --warn: #B3261E;
+  --preview-ground: #FAF8FC;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17111D; --surface: #221A2B; --ink: #F1ECF6; --muted: #A99CB8; --line: #382C45;
+    --chip: #302440; --accent: #C9A8EC; --accent-ink: #1E0E2E; --accent-soft: #3A2A4E;
+    --band: #2A103F; --ok: #5FC27F; --warn: #FF8A80; --preview-ground: #2B2136;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17111D; --surface: #221a2b; --ink: #F1ECF6; --muted: #A99CB8; --line: #382C45;
+  --chip: #302440; --accent: #C9A8EC; --accent-ink: #1E0E2E; --accent-soft: #3A2A4E;
+  --band: #2A103F; --ok: #5FC27F; --warn: #FF8A80; --preview-ground: #2B2136;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  background: var(--band); z-index: 10;
+}
+.band { background: var(--band); border-bottom: 4px solid var(--gold); }
+.band-in {
+  max-width: 1080px; margin: 0 auto; padding-block: 20px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px;
+}
+.band h1 { margin: 0; font: 700 28px/1.1 var(--font-display); color: #fff; letter-spacing: -0.01em; }
+.band p { margin: 0; color: var(--gold); font-weight: 500; }
+.wrap {
+  max-width: 1080px; margin: 0 auto; padding-block: 24px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start;
+}
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); } .side { position: static; } }
+
+.steps { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.step { padding: 20px; display: grid; gap: 12px; }
+.step + .step { border-top: 1px solid var(--line); }
+.step h2 { margin: 0; font: 600 18px/1.2 var(--font-display); display: flex; align-items: center; gap: 10px; }
+.step h2 .n {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink); font: 700 14px var(--font-display);
+}
+.hint { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+.types { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+.types button, .presets button {
+  font: 500 14px var(--font-body); color: var(--ink); background: var(--chip);
+  border: 2px solid transparent; border-radius: 8px; padding: 9px 10px; cursor: pointer; min-height: 40px;
+}
+.types button:hover, .presets button:hover { border-color: var(--accent-soft); }
+.types button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.presets button { display: inline-flex; align-items: center; gap: 8px; }
+.presets button[aria-pressed="true"] { border-color: var(--accent); }
+.dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(128,128,128,.5); flex: none; }
+
+label { display: block; font-weight: 600; font-size: 13.5px; margin-bottom: 5px; }
+.field + .field { margin-top: 12px; }
+input[type="text"] {
+  width: 100%; font: 400 16px var(--font-body); color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; min-height: 44px;
+}
+input[type="text"]::placeholder { color: var(--muted); opacity: .75; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+input[type="text"]:focus-visible { outline-offset: 0; border-color: var(--accent); }
+
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.btn {
+  font: 600 14px var(--font-body); border-radius: 8px; padding: 10px 16px; min-height: 42px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--chip); color: var(--accent);
+}
+.btn:hover { background: var(--accent-soft); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-size: 15px; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+.fname { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; min-width: 0; }
+.opt { display: grid; gap: 14px; }
+
+.side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 14px; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 14px; min-width: 0; }
+.panel h2 { margin: 0; font: 600 18px/1.2 var(--font-display); }
+.stage { background: var(--preview-ground); border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: grid; place-items: center; position: relative; }
+.stage canvas { display: block; max-width: 100%; height: auto; width: 100%; max-height: 440px; object-fit: contain; }
+.stage .tag {
+  position: absolute; top: 8px; left: 8px; font: 600 11px var(--font-body); letter-spacing: .06em; text-transform: uppercase;
+  background: var(--gold); color: #3A1556; padding: 2px 8px; border-radius: 4px;
+}
+.stage .tag[hidden] { display: none; }
+.opens { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+.opens code {
+  font: 13px ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; overflow-wrap: anywhere; word-break: break-all;
+}
+.save { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.save #save-pdf { grid-column: 1 / -1; }
+@media (max-width: 420px) { .save { grid-template-columns: 1fr; } }
+.warn { color: var(--warn); font-size: 13.5px; margin: 0; }
+.status { margin: 0; min-height: 1.5em; font-size: 13.5px; color: var(--muted); }
+.status.ok { color: var(--ok); }
+.status.bad { color: var(--warn); }
+.tips { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13.5px; display: grid; gap: 4px; }
+.foot {
+  position: relative; z-index: 1; background: var(--bg); border-top: 1px solid var(--line);
+  max-width: 1080px; margin: 0 auto; padding-block: 16px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  color: var(--muted); font-size: 12.5px;
+}
+.foot p { margin: 0; max-width: 70ch; }
+@media (prefers-reduced-motion: no-preference) { .btn, .types button, .presets button { transition: background .15s, border-color .15s; } }
+</style>
+
+<header class="band">
+  <div class="band-in">
+    <h1>QRUngu</h1>
+    <p>for clubs &amp; associations</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="steps" aria-label="QR code settings">
+    <div class="step">
+      <h2><span class="n">1</span>What is this QR for?</h2>
+      <div class="types" id="types" role="group" aria-label="QR type"></div>
+    </div>
+
+    <div class="step">
+      <h2><span class="n">2</span>Fill in the details</h2>
+      <p class="hint" id="hint"></p>
+      <div id="fields"></div>
+    </div>
+
+    <div class="step">
+      <h2><span class="n">3</span>Make it yours <span class="hint" style="font-weight:400">(optional)</span></h2>
+      <div class="opt">
+        <div>
+          <label id="colour-label">Colour</label>
+          <div class="presets" id="presets" role="group" aria-labelledby="colour-label"></div>
+        </div>
+        <div>
+          <label for="logo-file">Club logo in the centre</label>
+          <div class="row">
+            <input type="file" id="logo-file" accept="image/*" hidden>
+            <button class="btn" type="button" id="logo-pick">Choose logo</button>
+            <button class="btn" type="button" id="logo-clear" hidden>Remove</button>
+            <span class="fname" id="logo-name">No logo</span>
+          </div>
+        </div>
+        <div>
+          <label for="cap-title">Caption under the QR, e.g. club or event name</label>
+          <input type="text" id="cap-title" placeholder="Kelab Komputer UiTM" autocomplete="off">
+        </div>
+        <div>
+          <label for="cap-sub">Small text, e.g. what to do</label>
+          <input type="text" id="cap-sub" placeholder="Scan to register" autocomplete="off">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side" aria-label="Preview and download">
+    <div class="panel">
+      <h2>Live preview</h2>
+      <div class="stage">
+        <canvas id="cv" width="1000" height="1000" aria-label="QR code preview"></canvas>
+        <span class="tag" id="sample-tag">Sample</span>
+      </div>
+      <div class="opens" id="opens" hidden>
+        <span>This QR opens:</span>
+        <code id="payload"></code>
+        <div class="row"><button class="btn" type="button" id="copy">Copy</button></div>
+      </div>
+      <p class="hint" id="empty-hint">Type your details on the left. The sample above is replaced as you type.</p>
+      <p class="warn" id="warn" hidden></p>
+      <div class="save" id="save-row">
+        <button class="btn primary" type="button" id="save-png" disabled>Download PNG</button>
+        <button class="btn primary" type="button" id="save-svg" disabled>Download SVG</button>
+        <button class="btn" type="button" id="save-pdf" disabled>PDF</button>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+    </div>
+    <div class="panel">
+      <h2>Before you print</h2>
+      <ul class="tips">
+        <li>Scan it with your own phone first.</li>
+        <li>Print at least 3 cm wide. Bigger is easier for people far away.</li>
+        <li>Dark code on a light background scans best.</li>
+        <li>PNG for posters and social media. PDF for printing. SVG for designers.</li>
+      </ul>
+    </div>
+  </aside>
+
+  </main>
+
+<footer class="foot">
+  <p>Everything is made in your browser. Your links and logo are not uploaded anywhere. This is an independent tool for student clubs, not an official UiTM product.</p>
+  <p>@ 2026 <a href="https://github.com/dxnieldev" style="color: #A99CB8">dxnieldev</a></p>
+
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var TYPES = {
+    "Link": {
+      hint: "Event registration form, Google Form, Linktree, website, or a WhatsApp / Telegram group invite link.",
+      fields: [{ k: "url", label: "Paste your link", ph: "https://forms.gle/..." }]
+    },
+    "WhatsApp": {
+      hint: "Opens a chat with one number, such as the event committee. For a group, use the Link tab with the group invite link.",
+      fields: [
+        { k: "phone", label: "Phone number", ph: "e.g. 0123456789" },
+        { k: "message", label: "Pre-filled message (optional)", ph: "Hi, I want to join..." }
+      ]
+    },
+    "Instagram": {
+      hint: "Sends people straight to your club's Instagram page.",
+      fields: [{ k: "user", label: "Instagram username", ph: "@uitm_club" }]
+    },
+    "Telegram": {
+      hint: "Sends people to your Telegram channel or username. For a private group, use the Link tab.",
+      fields: [{ k: "user", label: "Telegram username", ph: "@uitm_club" }]
+    },
+    "Wi-Fi": {
+      hint: "Good for event venues. Phones join the network after scanning.",
+      fields: [
+        { k: "ssid", label: "Network name (SSID)", ph: "Event_WiFi" },
+        { k: "password", label: "Password", ph: "Leave empty for an open network" }
+      ]
+    },
+    "Email": {
+      hint: "Opens an email draft, for example for sponsorship or enquiries.",
+      fields: [
+        { k: "to", label: "Email address", ph: "club@uitm.edu.my" },
+        { k: "subject", label: "Subject (optional)", ph: "Enquiry about..." }
+      ]
+    },
+    "Text": {
+      hint: "Any plain text, such as a code, a note or a matric number.",
+      fields: [{ k: "text", label: "Your text", ph: "Type anything..." }]
+    }
+  };
+
+  var PRESETS = [
+    ["UiTM Purple", "#4B1D6B"],
+    ["Classic Black", "#000000"],
+    ["Midnight Navy", "#14213D"],
+    ["Forest Green", "#1B5E3A"],
+    ["Maroon", "#7B1E3A"]
+  ];
+  var SAMPLE_DATA = "https://www.uitm.edu.my";
+
+  var state = {
+    type: "Link",
+    vals: {},
+    fg: "#4B1D6B",
+    bg: "#FFFFFF",
+    logoImg: null,
+    logoData: null
+  };
+  Object.keys(TYPES).forEach(function (t) { state.vals[t] = {}; });
+
+  var $ = function (id) { return document.getElementById(id); };
+  var cv = $("cv");
+  var ctx = cv.getContext("2d");
+  var current = { payload: null, width: 1000, height: 1000, modules: null };
+  var downloads = null;
+  var timer = null;
+
+  if (window.qrcode && qrcode.stringToBytesFuncs && qrcode.stringToBytesFuncs["UTF-8"]) {
+    qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"];
+  }
+
+  /* ---------- payload builders ---------- */
+  function normalizeUrl(v) {
+    v = v.trim();
+    if (v && !/^[a-z][a-z0-9+.-]*:/i.test(v)) v = "https://" + v;
+    return v;
+  }
+  function normalizePhone(v) {
+    var d = v.replace(/\D/g, "");
+    if (d.charAt(0) === "0") d = "6" + d;
+    return d;
+  }
+  function cleanUser(v) {
+    v = v.trim().split("?")[0].replace(/\/+$/, "");
+    v = v.split("/").pop();
+    return v.replace(/^@/, "");
+  }
+  function wifiEsc(v) { return v.replace(/([\\;,:"])/g, "\\$1"); }
+
+  function buildPayload() {
+    var v = state.vals[state.type];
+    var g = function (k) { return (v[k] || "").trim(); };
+    switch (state.type) {
+      case "Link": return normalizeUrl(g("url")) || null;
+      case "WhatsApp": {
+        var p = normalizePhone(g("phone"));
+        if (!p) return null;
+        return "https://wa.me/" + p + (g("message") ? "?text=" + encodeURIComponent(g("message")) : "");
+      }
+      case "Instagram": { var u = cleanUser(g("user")); return u ? "https://instagram.com/" + u : null; }
+      case "Telegram": { var t = cleanUser(g("user")); return t ? "https://t.me/" + t : null; }
+      case "Wi-Fi": {
+        if (!g("ssid")) return null;
+        var pw = v.password || "";
+        return pw ? "WIFI:T:WPA;S:" + wifiEsc(g("ssid")) + ";P:" + wifiEsc(pw) + ";;"
+                  : "WIFI:T:nopass;S:" + wifiEsc(g("ssid")) + ";;";
+      }
+      case "Email":
+        if (!g("to")) return null;
+        return "mailto:" + g("to") + (g("subject") ? "?subject=" + encodeURIComponent(g("subject")) : "");
+      case "Text": return g("text") || null;
+    }
+    return null;
+  }
+
+  /* ---------- colour helpers ---------- */
+  function lum(hex) {
+    var c = [1, 3, 5].map(function (i) {
+      var x = parseInt(hex.substr(i, 2), 16) / 255;
+      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function contrast(a, b) {
+    var l1 = Math.max(lum(a), lum(b)), l2 = Math.min(lum(a), lum(b));
+    return (l1 + 0.05) / (l2 + 0.05);
+  }
+
+  /* ---------- drawing ---------- */
+  var S = 1000;
+  var FONT = '"Bricolage Grotesque", "Segoe UI", Arial, sans-serif';
+  var measure = document.createElement("canvas").getContext("2d");
+
+  function wrap(text, font, maxW) {
+    measure.font = font;
+    var lines = [], line = "";
+    text.split(/\s+/).filter(Boolean).forEach(function (w) {
+      var trial = line ? line + " " + w : w;
+      if (measure.measureText(trial).width <= maxW || !line) line = trial;
+      else { lines.push(line); line = w; }
+    });
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  function makeModules(data) {
+    var qr = qrcode(0, "H");
+    qr.addData(data, "Byte");
+    qr.make();
+    var n = qr.getModuleCount(), rows = [];
+    for (var r = 0; r < n; r++) {
+      var row = [];
+      for (var c = 0; c < n; c++) row.push(qr.isDark(r, c));
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function layout(titleText, subText) {
+    var tFont = "700 65px " + FONT, sFont = "500 42px " + FONT;
+    var tLines = titleText ? wrap(titleText, tFont, S) : [];
+    var sLines = subText ? wrap(subText, sFont, S) : [];
+    var hasCap = tLines.length + sLines.length > 0;
+    var m = hasCap ? 60 : 0;
+    var width = S + m * 2;
+    var height = hasCap ? m + S + 30 + tLines.length * 85 + sLines.length * 55 + m : S;
+    return { tFont: tFont, sFont: sFont, tLines: tLines, sLines: sLines, m: m, width: width, height: height, hasCap: hasCap };
+  }
+
+  function draw(data, modules, titleText, subText) {
+    var L = layout(titleText, subText);
+    cv.width = L.width; cv.height = L.height;
+    ctx.fillStyle = state.bg;
+    ctx.fillRect(0, 0, L.width, L.height);
+
+    var n = modules.length, cells = n + 4, cell = S / cells;
+    ctx.fillStyle = state.fg;
+    for (var r = 0; r < n; r++) {
+      for (var c = 0; c < n; c++) {
+        if (!modules[r][c]) continue;
+        var x0 = Math.round((c + 2) * cell), x1 = Math.round((c + 3) * cell);
+        var y0 = Math.round((r + 2) * cell), y1 = Math.round((r + 3) * cell);
+        ctx.fillRect(L.m + x0, L.m + y0, x1 - x0, y1 - y0);
+      }
+    }
+
+    if (state.logoImg) {
+      var box = S * 0.2, im = state.logoImg;
+      var k = Math.min(box / im.naturalWidth, box / im.naturalHeight);
+      var lw = im.naturalWidth * k, lh = im.naturalHeight * k, pad = S * 0.015;
+      var cx = L.m + S / 2, cy = L.m + S / 2;
+      ctx.fillStyle = state.bg;
+      ctx.fillRect(cx - lw / 2 - pad, cy - lh / 2 - pad, lw + pad * 2, lh + pad * 2);
+      ctx.drawImage(im, cx - lw / 2, cy - lh / 2, lw, lh);
+    }
+
+    if (L.hasCap) {
+      ctx.fillStyle = state.fg;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      var y = L.m + S + 30;
+      ctx.font = L.tFont;
+      L.tLines.forEach(function (t) { ctx.fillText(t, L.width / 2, y); y += 85; });
+      ctx.font = L.sFont;
+      L.sLines.forEach(function (t) { ctx.fillText(t, L.width / 2, y); y += 55; });
+    }
+    current.width = L.width; current.height = L.height;
+    return L;
+  }
+
+  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+  function buildSvg(modules, L) {
+    var n = modules.length, cells = n + 4, cell = S / cells, d = "";
+    for (var r = 0; r < n; r++) {
+      for (var c = 0; c < n; c++) {
+        if (!modules[r][c]) continue;
+        var x0 = Math.round((c + 2) * cell) + L.m, x1 = Math.round((c + 3) * cell) + L.m;
+        var y0 = Math.round((r + 2) * cell) + L.m, y1 = Math.round((r + 3) * cell) + L.m;
+        d += "M" + x0 + " " + y0 + "h" + (x1 - x0) + "v" + (y1 - y0) + "h-" + (x1 - x0) + "z";
+      }
+    }
+    var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + L.width + " " + L.height + '" width="' + L.width + '" height="' + L.height + '">';
+    s += '<rect width="100%" height="100%" fill="' + state.bg + '"/>';
+    s += '<path d="' + d + '" fill="' + state.fg + '" shape-rendering="crispEdges"/>';
+    if (state.logoImg && state.logoData) {
+      var im = state.logoImg, box = S * 0.2, k = Math.min(box / im.naturalWidth, box / im.naturalHeight);
+      var lw = im.naturalWidth * k, lh = im.naturalHeight * k, pad = S * 0.015, cx = L.m + S / 2, cy = L.m + S / 2;
+      s += '<rect x="' + (cx - lw / 2 - pad) + '" y="' + (cy - lh / 2 - pad) + '" width="' + (lw + pad * 2) + '" height="' + (lh + pad * 2) + '" fill="' + state.bg + '"/>';
+      s += '<image href="' + state.logoData + '" x="' + (cx - lw / 2) + '" y="' + (cy - lh / 2) + '" width="' + lw + '" height="' + lh + '"/>';
+    }
+    var y = L.m + S + 30;
+    L.tLines.forEach(function (t) {
+      s += '<text x="' + L.width / 2 + '" y="' + (y + 58) + '" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="65" fill="' + state.fg + '">' + esc(t) + "</text>";
+      y += 85;
+    });
+    L.sLines.forEach(function (t) {
+      s += '<text x="' + L.width / 2 + '" y="' + (y + 38) + '" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="42" fill="' + state.fg + '">' + esc(t) + "</text>";
+      y += 55;
+    });
+    return s + "</svg>";
+  }
+
+  function buildPdf(jpeg, w, h) {
+    var enc = new TextEncoder(), parts = [], len = 0, offs = [];
+    function push(b) { if (typeof b === "string") b = enc.encode(b); parts.push(b); len += b.length; }
+    function obj(n, fn) { offs[n] = len; push(n + " 0 obj\n"); fn(); push("\nendobj\n"); }
+    var pw = 595.28, ph = 841.89, iw = 420, ih = iw * h / w, x = (pw - iw) / 2, y = ph - ih - 120;
+    var content = "q " + iw + " 0 0 " + ih.toFixed(2) + " " + x.toFixed(2) + " " + y.toFixed(2) + " cm /Im0 Do Q";
+    push("%PDF-1.4\n");
+    obj(1, function () { push("<< /Type /Catalog /Pages 2 0 R >>"); });
+    obj(2, function () { push("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"); });
+    obj(3, function () { push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + pw + " " + ph + "] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>"); });
+    obj(4, function () {
+      push("<< /Type /XObject /Subtype /Image /Width " + w + " /Height " + h + " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + jpeg.length + " >>\nstream\n");
+      push(jpeg); push("\nendstream");
+    });
+    obj(5, function () { push("<< /Length " + content.length + " >>\nstream\n" + content + "\nendstream"); });
+    var xref = len;
+    push("xref\n0 6\n0000000000 65535 f \n");
+    for (var i = 1; i <= 5; i++) push(String(offs[i]).padStart(10, "0") + " 00000 n \n");
+    push("trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF");
+    return new Blob(parts, { type: "application/pdf" });
+  }
+
+  /* ---------- update cycle ---------- */
+  function setStatus(msg, cls) {
+    var s = $("status");
+    s.textContent = msg || "";
+    s.className = "status" + (cls ? " " + cls : "");
+  }
+  function setSaveEnabled(on) {
+    ["save-png", "save-svg", "save-pdf"].forEach(function (id) { $(id).disabled = !on; });
+  }
+
+  function update() {
+    timer = null;
+    if (!window.qrcode) {
+      setStatus("The QR library could not load. Check your connection and reload the page.", "bad");
+      return;
+    }
+    var payload = buildPayload();
+    var data = payload || SAMPLE_DATA;
+    var modules;
+    try {
+      modules = makeModules(data);
+    } catch (e) {
+      current.payload = null;
+      setSaveEnabled(false);
+      setStatus("That is too much for one QR code. Try a shorter link.", "bad");
+      return;
+    }
+    current.payload = payload;
+    current.modules = modules;
+    current.layout = draw(data, modules, $("cap-title").value.trim(), $("cap-sub").value.trim());
+
+    $("sample-tag").hidden = !!payload;
+    $("opens").hidden = !payload;
+    $("empty-hint").hidden = !!payload;
+    if (payload) $("payload").textContent = payload;
+
+    var notes = [];
+    if (contrast(state.fg, state.bg) < 4) notes.push("Low contrast. Darker colours scan better.");
+    if (payload && payload.length > 300) notes.push("Long content makes a dense code. A shorter link scans more easily.");
+    $("warn").hidden = notes.length === 0;
+    $("warn").textContent = notes.join(" ");
+
+    setSaveEnabled(!!payload);
+    if (payload) setStatus("Looks good. Save it when you are ready.", "ok");
+    else setStatus("");
+  }
+  function schedule() { if (timer) clearTimeout(timer); timer = setTimeout(update, 180); }
+
+  /* ---------- UI ---------- */
+  function renderTypes() {
+    var host = $("types");
+    host.innerHTML = "";
+    Object.keys(TYPES).forEach(function (name) {
+      var b = document.createElement("button");
+      b.type = "button"; b.textContent = name;
+      b.setAttribute("aria-pressed", String(name === state.type));
+      b.addEventListener("click", function () { state.type = name; renderTypes(); renderFields(); schedule(); });
+      host.appendChild(b);
+    });
+  }
+  function renderFields() {
+    var def = TYPES[state.type];
+    $("hint").textContent = def.hint;
+    var host = $("fields");
+    host.innerHTML = "";
+    def.fields.forEach(function (f) {
+      var wrap = document.createElement("div");
+      wrap.className = "field";
+      var l = document.createElement("label");
+      l.htmlFor = "f-" + f.k; l.textContent = f.label;
+      var i = document.createElement("input");
+      i.type = "text"; i.id = "f-" + f.k; i.placeholder = f.ph; i.autocomplete = "off";
+      i.setAttribute("autocapitalize", "off"); i.spellcheck = false;
+      i.value = state.vals[state.type][f.k] || "";
+      i.addEventListener("input", function () { state.vals[state.type][f.k] = i.value; schedule(); });
+      wrap.appendChild(l); wrap.appendChild(i); host.appendChild(wrap);
+    });
+  }
+  function renderPresets() {
+    var host = $("presets");
+    host.innerHTML = "";
+    PRESETS.forEach(function (p) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(state.fg.toLowerCase() === p[1].toLowerCase()));
+      var dot = document.createElement("span");
+      dot.className = "dot"; dot.style.background = p[1];
+      b.appendChild(dot); b.appendChild(document.createTextNode(p[0]));
+      b.addEventListener("click", function () { state.fg = p[1]; renderPresets(); schedule(); });
+      host.appendChild(b);
+    });
+  }
+
+  $("logo-pick").addEventListener("click", function () { $("logo-file").click(); });
+  $("logo-file").addEventListener("change", function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var im = new Image();
+      im.onload = function () {
+        state.logoImg = im; state.logoData = reader.result;
+        $("logo-name").textContent = file.name.length > 30 ? file.name.slice(0, 27) + "..." : file.name;
+        $("logo-clear").hidden = false;
+        schedule();
+      };
+      im.onerror = function () { setStatus("That file could not be opened as an image.", "bad"); };
+      im.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  $("logo-clear").addEventListener("click", function () {
+    state.logoImg = null; state.logoData = null;
+    $("logo-file").value = ""; $("logo-name").textContent = "No logo"; $("logo-clear").hidden = true;
+    schedule();
+  });
+  $("cap-title").addEventListener("input", schedule);
+  $("cap-sub").addEventListener("input", schedule);
+
+  $("copy").addEventListener("click", function () {
+    var text = current.payload || "";
+    function fallback() {
+      var r = document.createRange(); r.selectNodeContents($("payload"));
+      var sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      setStatus("Press Ctrl+C (or copy) to copy the selected text.");
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { setStatus("Copied.", "ok"); }, fallback);
+    } else fallback();
+  });
+
+  /* Use the host's save prompt when it offers one (claude.ai), otherwise a normal browser download. */
+  function deliver(req) {
+    if (downloads) return downloads.save(req);
+    return new Promise(function (resolve, reject) {
+      try {
+        var mime = /\.svg$/i.test(req.filename) ? "image/svg+xml" : /\.pdf$/i.test(req.filename) ? "application/pdf" : "image/png";
+        var blob = req.data instanceof Blob ? req.data : new Blob([req.data], { type: mime });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url; a.download = req.filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+        resolve({ status: "saved" });
+      } catch (e) { reject(e); }
+    });
+  }
+
+  function save(kind) {
+    if (!current.payload) return;
+    var L = current.layout;
+    var job;
+    if (kind === "png") {
+      job = new Promise(function (res) { cv.toBlob(res, "image/png"); }).then(function (b) { return { filename: "qr-code.png", data: b }; });
+    } else if (kind === "svg") {
+      job = Promise.resolve({ filename: "qr-code.svg", data: buildSvg(current.modules, L) });
+    } else {
+      job = new Promise(function (res) { cv.toBlob(res, "image/jpeg", 0.95); })
+        .then(function (b) { return b.arrayBuffer(); })
+        .then(function (buf) { return { filename: "qr-code.pdf", data: buildPdf(new Uint8Array(buf), cv.width, cv.height) }; });
+    }
+    job.then(deliver).then(function () {
+      setStatus("Saved. Check your downloads folder.", "ok");
+    }).catch(function (err) {
+      if (err && err.code === "declined") setStatus("Save cancelled.");
+      else setStatus("Could not save the file. Please try again.", "bad");
+    });
+  }
+  $("save-png").addEventListener("click", function () { save("png"); });
+  $("save-svg").addEventListener("click", function () { save("svg"); });
+  $("save-pdf").addEventListener("click", function () { save("pdf"); });
+
+  /* ---------- start ---------- */
+  renderTypes(); renderFields(); renderPresets();
+  update();
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load("700 65px " + FONT).then(function () { return document.fonts.load("500 42px " + FONT); }).then(schedule, function () {});
+  }
+  if (window.claude && window.claude.use) {
+    window.claude.use("downloads").then(function (d) { downloads = d; }, function () {});
+  }
+})();
+</script>
+
+</body></html>
