@@ -2,7 +2,7 @@
 
 A free QR code maker for UiTM clubs and associations. Make poster-ready QR codes right in the browser. No sign-up, no install, no server.
 
-**Live site:** https://qrungu.github.io
+**Live site:** https://dxnieldev.github.io/qrungu
 
 ## What it can do
 
@@ -12,7 +12,6 @@ Make a QR code for:
 - **WhatsApp**: open a chat with a number, with an optional pre-filled message
 - **Instagram**: send people to your club's page from a username
 - **Telegram**: send people to a channel or username
-- **Wi-Fi**: let phones join the network by scanning
 - **Email**: open a draft with the address and subject filled in
 - **Text**: any plain text, such as a code or a matric number
 
@@ -32,4 +31,4 @@ Make a QR code for:
 - Works on phones and desktops
 - Runs fully in your browser. Links and logos are never uploaded.
 
-Made by and for students 
+Made by students, for students
