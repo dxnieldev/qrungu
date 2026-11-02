@@ -6,7 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <style>
-/* Layout: purple header band, one working column of three steps on the left, sticky live preview on the right; stacks on phones. */
+
 :root {
   --bg: #F5F2F8;
   --surface: #FFFFFF;
@@ -18,7 +18,7 @@
   --accent-ink: #FFFFFF;
   --accent-soft: #E6DAF0;
   --band: #3A1556;
-  --gold: #F2B705;
+  --gold: #d4ab2f;
   --ok: #1E7A3C;
   --warn: #B3261E;
   --preview-ground: #FAF8FC;
@@ -146,7 +146,6 @@ input[type="text"]:focus-visible { outline-offset: 0; border-color: var(--accent
 <header class="band">
   <div class="band-in">
     <h1>QRUngu</h1>
-    <p>for clubs &amp; associations</p>
   </div>
 </header>
 
@@ -226,7 +225,7 @@ input[type="text"]:focus-visible { outline-offset: 0; border-color: var(--accent
   </main>
 
 <footer class="foot">
-  <p>Everything is made in your browser. Your links and logo are not uploaded anywhere. This is an independent tool for student clubs, not an official UiTM product.</p>
+  <p>Everything is made in your browser. Your links and logo are not uploaded anywhere. This is an independent tool for students, not an official UiTM product.</p>
   <p>@ 2026 <a href="https://github.com/dxnieldev" style="color: #A99CB8">dxnieldev</a></p>
 
 </footer>
@@ -255,13 +254,13 @@ input[type="text"]:focus-visible { outline-offset: 0; border-color: var(--accent
       hint: "Sends people to your Telegram channel or username. For a private group, use the Link tab.",
       fields: [{ k: "user", label: "Telegram username", ph: "@uitm_club" }]
     },
-    "Wi-Fi": {
-      hint: "Good for event venues. Phones join the network after scanning.",
-      fields: [
-        { k: "ssid", label: "Network name (SSID)", ph: "Event_WiFi" },
-        { k: "password", label: "Password", ph: "Leave empty for an open network" }
-      ]
-    },
+    // "Wi-Fi": {
+    //   hint: "Good for event venues. Phones join the network after scanning.",
+    //   fields: [
+    //     { k: "ssid", label: "Network name (SSID)", ph: "Event_WiFi" },
+    //     { k: "password", label: "Password", ph: "Leave empty for an open network" }
+    //   ]
+    // },
     "Email": {
       hint: "Opens an email draft, for example for sponsorship or enquiries.",
       fields: [
@@ -335,12 +334,12 @@ input[type="text"]:focus-visible { outline-offset: 0; border-color: var(--accent
       }
       case "Instagram": { var u = cleanUser(g("user")); return u ? "https://instagram.com/" + u : null; }
       case "Telegram": { var t = cleanUser(g("user")); return t ? "https://t.me/" + t : null; }
-      case "Wi-Fi": {
-        if (!g("ssid")) return null;
-        var pw = v.password || "";
-        return pw ? "WIFI:T:WPA;S:" + wifiEsc(g("ssid")) + ";P:" + wifiEsc(pw) + ";;"
-                  : "WIFI:T:nopass;S:" + wifiEsc(g("ssid")) + ";;";
-      }
+      // case "Wi-Fi": {
+      //   if (!g("ssid")) return null;
+      //   var pw = v.password || "";
+      //   return pw ? "WIFI:T:WPA;S:" + wifiEsc(g("ssid")) + ";P:" + wifiEsc(pw) + ";;"
+      //             : "WIFI:T:nopass;S:" + wifiEsc(g("ssid")) + ";;";
+      // }
       case "Email":
         if (!g("to")) return null;
         return "mailto:" + g("to") + (g("subject") ? "?subject=" + encodeURIComponent(g("subject")) : "");
